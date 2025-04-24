@@ -1,0 +1,19 @@
+{
+  "companies": {
+    "default": {
+      "name": "Default Company",
+      "description": "Default company for RAG system",
+      "db_dir": "db/default",
+      "llm_model": "llama3:8b",
+      "embedding_model": "mxbai-embed-large:latest"
+    },
+    "TGO": {
+      "name": null,
+      "description": "",
+      "db_dir": "db/TGO",
+      "llm_model": "llama3:8b",
+      "embedding_model": "mxbai-embed-large:latest"
+    }
+  },
+  "active_company": "TGO"
+}

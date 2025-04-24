@@ -1,0 +1,8 @@
+{
+  "default_llm_model": "llama3:8b",
+  "default_embedding_model": "mxbai-embed-large:latest",
+  "temperature": 0.7,
+  "top_k": 4,
+  "chunk_size": 1000,
+  "chunk_overlap": 200
+}
