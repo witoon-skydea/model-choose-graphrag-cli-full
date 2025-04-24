@@ -27,9 +27,7 @@ ENV/
 env/
 
 # Databases and Logs
-db/*/chroma*
-db/*/*/*.bin
-db/*/*/*.pkl
+db/
 graph/*/knowledge_graph.pkl
 *.log
 *.sqlite
