@@ -143,9 +143,15 @@ def ingest_documents(args):
         
         # Visualize graph if requested
         if args.visualize_graph:
-            graph_viz_path = os.path.join(os.path.dirname(db_path), "knowledge_graph.png")
-            print(f"Visualizing knowledge graph to {graph_viz_path}...")
-            knowledge_graph.visualize(graph_viz_path, max_nodes=50)
+            # Determine output format
+            output_format = args.format.lower() if hasattr(args, 'format') and args.format else "png"
+            if output_format == "mermaid":
+                graph_viz_path = os.path.join(os.path.dirname(db_path), "knowledge_graph.md")
+            else:
+                graph_viz_path = os.path.join(os.path.dirname(db_path), "knowledge_graph.png")
+                
+            print(f"Visualizing knowledge graph to {graph_viz_path} in {output_format} format...")
+            visualize_graph(knowledge_graph, graph_viz_path, max_nodes=50, format=output_format)
 
 def answer_question(args):
     """
@@ -300,9 +306,15 @@ def answer_question(args):
     
     # Visualize graph used in query if requested
     if args.explain and graph_data:
-        output_path = os.path.join(os.path.dirname(db_path), "query_explanation.png")
-        print(f"Generating visual explanation to {output_path}...")
-        visualize_query_path(knowledge_graph, graph_data, output_path)
+        # Determine output format
+        output_format = args.format.lower() if hasattr(args, 'format') and args.format else "png"
+        if output_format == "mermaid":
+            output_path = os.path.join(os.path.dirname(db_path), "query_explanation.md")
+        else:
+            output_path = os.path.join(os.path.dirname(db_path), "query_explanation.png")
+        
+        print(f"Generating visual explanation to {output_path} in {output_format} format...")
+        visualize_query_path(knowledge_graph, graph_data, output_path, format=output_format)
 
 def build_graph(args):
     """
@@ -369,9 +381,15 @@ def build_graph(args):
     
     # Visualize graph if requested
     if args.visualize:
-        output_path = os.path.join(os.path.dirname(db_path), "knowledge_graph.png")
-        print(f"Visualizing knowledge graph to {output_path}...")
-        knowledge_graph.visualize(output_path, max_nodes=args.max_nodes)
+        # Determine output format
+        output_format = args.format.lower() if hasattr(args, 'format') and args.format else "png"
+        if output_format == "mermaid":
+            output_path = os.path.join(os.path.dirname(db_path), "knowledge_graph.md")
+        else:
+            output_path = os.path.join(os.path.dirname(db_path), "knowledge_graph.png")
+            
+        print(f"Visualizing knowledge graph to {output_path} in {output_format} format...")
+        visualize_graph(knowledge_graph, output_path, max_nodes=args.max_nodes, format=output_format)
 
 def visualize_knowledge_graph(args):
     """
@@ -404,10 +422,20 @@ def visualize_knowledge_graph(args):
     
     knowledge_graph = KnowledgeGraph(graph_dir)
     
+    # Determine output format and path
+    output_format = args.format.lower()
+    if args.output:
+        output_path = args.output
+    else:
+        if output_format == "mermaid":
+            output_path = os.path.join(os.path.dirname(db_path), "knowledge_graph.md")
+        else:
+            output_path = os.path.join(os.path.dirname(db_path), "knowledge_graph.png")
+    
+    print(f"Visualizing knowledge graph to {output_path} in {output_format} format...")
+    
     # Visualize graph
-    output_path = args.output if args.output else os.path.join(os.path.dirname(db_path), "knowledge_graph.png")
-    print(f"Visualizing knowledge graph to {output_path}...")
-    knowledge_graph.visualize(output_path, max_nodes=args.max_nodes)
+    visualize_graph(knowledge_graph, output_path, max_nodes=args.max_nodes, format=output_format)
 
 def company_management(args):
     """
@@ -636,6 +664,8 @@ def main():
     ingest_parser.add_argument("--llm-model", help="LLM model to use for entity extraction")
     ingest_parser.add_argument("--visualize-graph", action="store_true", default=False,
                               help="Visualize the knowledge graph after building")
+    ingest_parser.add_argument("--format", choices=["png", "mermaid"], default="png",
+                             help="Output format for visualization (png: image file, mermaid: Mermaid markdown) (default: png)")
     
     # OCR options
     ingest_parser.add_argument("--ocr", action="store_true", default=False,
@@ -667,13 +697,17 @@ def main():
                              help="Visualize the resulting knowledge graph")
     build_parser.add_argument("--max-nodes", type=int, default=50,
                              help="Maximum number of nodes to display in visualization (default: 50)")
+    build_parser.add_argument("--format", choices=["png", "mermaid"], default="png",
+                             help="Output format for visualization (png: image file, mermaid: Mermaid markdown) (default: png)")
     
     # Visualize graph command
     viz_parser = subparsers.add_parser("visualize-graph", help="Visualize the knowledge graph")
     viz_parser.add_argument("--company", help="Company ID to visualize graph for (uses active company if not specified)")
-    viz_parser.add_argument("--output", help="Output file path (default: knowledge_graph.png)")
+    viz_parser.add_argument("--output", help="Output file path (default: knowledge_graph.png or knowledge_graph.md)")
     viz_parser.add_argument("--max-nodes", type=int, default=50,
                            help="Maximum number of nodes to display (default: 50)")
+    viz_parser.add_argument("--format", choices=["png", "mermaid"], default="png",
+                           help="Output format (png: image file, mermaid: Mermaid markdown) (default: png)")
     
     # Query command
     query_parser = subparsers.add_parser("query", help="Query the documents using GraphRAG")
@@ -681,6 +715,8 @@ def main():
     query_parser.add_argument("--company", help="Company ID to query from (uses active company if not specified)")
     query_parser.add_argument("--raw-chunks", action="store_true", help="Return raw chunks without LLM processing")
     query_parser.add_argument("--num-chunks", type=int, help="Number of chunks to return (default from system settings)")
+    query_parser.add_argument("--format", choices=["png", "mermaid"], default="png",
+                             help="Output format for explanation visualization (png: image file, mermaid: Mermaid markdown) (default: png)")
     query_parser.add_argument("--llm-model", help="Override LLM model for this query")
     query_parser.add_argument("--embedding-model", help="Override embedding model for this query")
     query_parser.add_argument("--temperature", type=float, help="Override temperature for this query")

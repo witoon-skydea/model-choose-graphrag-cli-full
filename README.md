@@ -17,6 +17,8 @@ A powerful GraphRAG (Graph-enhanced Retrieval-Augmented Generation) command-line
 - **Visualization**:
   - Visualize knowledge graphs to explore document connections
   - Generate visual explanations of query reasoning paths
+  - Support for Thai language in visualizations
+  - Export visualizations as Mermaid diagrams for embedding in markdown
 
 - **Model Flexibility**:
   - Choose different LLM and embedding models for different tasks
@@ -172,6 +174,15 @@ Using the `--raw-chunks` option with different retrieval methods can reveal insi
 
 # Save visualization to specific file
 ./run.sh visualize-graph --output my-graph.png
+
+# Generate Mermaid diagram instead of PNG image
+./run.sh visualize-graph --format mermaid
+
+# Save Mermaid diagram to specific file
+./run.sh visualize-graph --format mermaid --output my-graph.md
+
+# Visualize graph with Thai text support
+./run.sh visualize-graph --company thai-docs
 ```
 
 ### Querying With Different Retrieval Methods
@@ -190,6 +201,9 @@ Using the `--raw-chunks` option with different retrieval methods can reveal insi
 
 # Hybrid retrieval with visual explanation
 ./run.sh query "What connects these ideas?" --retrieval-method hybrid --explain
+
+# Hybrid retrieval with Mermaid diagram explanation
+./run.sh query "What connects these ideas?" --retrieval-method hybrid --explain --format mermaid
 
 # Hybrid retrieval with raw chunks display (no LLM processing)
 ./run.sh query "Find information about topic X" --retrieval-method hybrid --raw-chunks
@@ -455,7 +469,7 @@ officer.
 
 ### Thai Language Support
 
-For documents containing Thai text, the system uses specialized entity extraction:
+For documents containing Thai text, the system uses specialized entity extraction and supports Thai text in visualizations:
 
 ```bash
 # Ingest Thai documents and build knowledge graph
@@ -463,9 +477,49 @@ For documents containing Thai text, the system uses specialized entity extractio
 
 # Query with Thai language
 ./run.sh query "ความสัมพันธ์ระหว่างบริษัท X และบริษัท Y คืออะไร?" --retrieval-method hybrid
+
+# Visualize graph with Thai entities
+./run.sh visualize-graph --company thai-docs
+
+# Generate Mermaid diagram with Thai entities
+./run.sh visualize-graph --company thai-docs --format mermaid
 ```
 
-The Thai entity extraction module is designed specifically to handle Thai language characteristics, improving entity and relationship recognition in Thai documents.
+The Thai entity extraction module is designed specifically to handle Thai language characteristics, improving entity and relationship recognition in Thai documents. The visualization system has been enhanced to properly display Thai characters in both PNG images and Mermaid diagrams.
+
+### Mermaid Diagram Export
+
+The system now supports exporting knowledge graphs as Mermaid diagrams, which can be embedded in markdown documents:
+
+```bash
+# Generate Mermaid diagram from knowledge graph
+./run.sh visualize-graph --format mermaid
+
+# Generate Mermaid diagram with custom output path
+./run.sh visualize-graph --format mermaid --output graph.md
+
+# Generate Mermaid diagram during ingestion
+./run.sh ingest documents/ --build-graph --visualize-graph --format mermaid
+
+# Generate Mermaid diagram for query explanation
+./run.sh query "How are X and Y related?" --explain --format mermaid
+```
+
+The generated Mermaid diagrams can be viewed in any markdown viewer that supports Mermaid syntax, such as GitHub, GitLab, or VSCode with the Mermaid extension.
+
+Example Mermaid diagram output:
+
+```mermaid
+graph TD
+    person_john["John Smith"]
+    org_acme["ACME Corporation"]
+    concept_ai["Artificial Intelligence"]
+    person_john -->|works_for| org_acme
+    org_acme -->|develops| concept_ai
+    class person_john person
+    class org_acme organization
+    class concept_ai concept
+```
 
 ## License
 

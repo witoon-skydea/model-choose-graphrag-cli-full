@@ -427,6 +427,10 @@ class KnowledgeGraph:
             subgraph = self.graph.subgraph(nodes)
         else:
             subgraph = self.graph
+            
+        # Setup Thai font support
+        from rag.visualization.visualization import setup_thai_font
+        setup_thai_font()
         
         # Create figure
         plt.figure(figsize=(12, 10))
@@ -478,3 +482,62 @@ class KnowledgeGraph:
             plt.show()
         
         plt.close()
+        
+    def to_mermaid(self, output_path: str, max_nodes: int = 50):
+        """
+        Generate a Mermaid diagram representation of the knowledge graph
+        
+        Args:
+            output_path: Path to save the Mermaid diagram
+            max_nodes: Maximum number of nodes to display
+        """
+        if self.graph.number_of_nodes() == 0:
+            print("Knowledge graph is empty, nothing to visualize.")
+            return
+        
+        # Limit the number of nodes for visualization
+        if self.graph.number_of_nodes() > max_nodes:
+            print(f"Graph is too large ({self.graph.number_of_nodes()} nodes), showing top {max_nodes} nodes by degree")
+            
+            # Get nodes sorted by degree
+            nodes_by_degree = sorted(self.graph.degree, key=lambda x: x[1], reverse=True)[:max_nodes]
+            nodes = [node for node, _ in nodes_by_degree]
+            
+            # Create subgraph
+            subgraph = self.graph.subgraph(nodes)
+        else:
+            subgraph = self.graph
+            
+        # Create Mermaid content
+        mermaid_content = ["```mermaid", "graph TD"]
+        
+        # Add style classes for different entity types
+        entity_types = set(subgraph.nodes[node].get('entity_type', 'unknown') for node in subgraph.nodes)
+        style_defs = []
+        for i, entity_type in enumerate(entity_types):
+            color = f"#{(i*3+1)%10}{(i*5+3)%10}{(i*7+5)%10}"
+            style_defs.append(f"    classDef {entity_type} fill:{color},stroke:#333,stroke-width:1px")
+        
+        # Add nodes
+        for node in subgraph.nodes:
+            node_name = subgraph.nodes[node].get('name', node)
+            node_name = node_name.replace('"', '\\"')  # Escape quotes
+            mermaid_content.append(f"    {node}[\"{node_name}\"]")
+            entity_type = subgraph.nodes[node].get('entity_type', 'unknown')
+            mermaid_content.append(f"    class {node} {entity_type}")
+        
+        # Add edges
+        for u, v, data in subgraph.edges(data=True):
+            relation_type = data.get('relation_type', '')
+            relation_type = relation_type.replace('"', '\\"')  # Escape quotes
+            mermaid_content.append(f"    {u} -->|{relation_type}| {v}")
+        
+        # Add style definitions
+        mermaid_content.extend(style_defs)
+        mermaid_content.append("```")
+        
+        # Write to file
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write("\n".join(mermaid_content))
+        
+        print(f"Mermaid diagram saved to {output_path}")
