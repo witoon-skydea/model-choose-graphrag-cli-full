@@ -427,7 +427,14 @@ def company_management(args):
         
         for company in companies:
             active_mark = "✓" if company.get('active', False) else ""
-            print(f"{company['id']:<15} {company['name']:<20} {company['description'][:20]:<20} {company['llm_model']:<15} {company['embedding_model']:<15} {active_mark}")
+            # Handle None values with safe string formatting and explicit string conversion
+            company_id = str(company.get('id', ''))
+            company_name = str(company.get('name', ''))
+            company_desc = str(company.get('description', ''))[:20] if company.get('description') else ''
+            llm_model = str(company.get('llm_model', ''))
+            embedding_model = str(company.get('embedding_model', ''))
+            
+            print(f"{company_id:<15} {company_name:<20} {company_desc:<20} {llm_model:<15} {embedding_model:<15} {active_mark}")
         
         print("-" * 80)
         
